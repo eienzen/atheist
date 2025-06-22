@@ -17,13 +17,14 @@
     <div id="app" class="container mx-auto p-4">
         <header class="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-4">
             <h1 class="text-2xl font-bold">Atheist Protocol</h1>
-            <button id="languageToggle" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Switch to Hindi
-            </button>
             <button id="connectWallet" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                 Connect Wallet
             </button>
             <div id="status" class="mt-2 text-sm text-red-500"></div>
+            <button id="generateReferral" class="mt-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                Generate Referral Link
+            </button>
+            <div id="referralLink" class="mt-2 text-sm text-blue-500 hidden"></div>
         </header>
 
         <div id="dashboard" class="hidden bg-white p-4 rounded-lg shadow-md mb-4">
@@ -947,23 +948,15 @@
                 }
             }, () => {
                 console.log('i18next initialized, checking translations...');
-                i18next.on('languageChanged', () => {
-                    document.getElementById('app').innerHTML = '';
-                    document.body.innerHTML = document.getElementById('app').outerHTML;
-                    initializeApp();
-                });
                 initializeApp();
             });
 
             async function initializeApp() {
-                const languageToggle = document.getElementById('languageToggle');
-                languageToggle.addEventListener('click', () => {
-                    const currentLng = i18next.language;
-                    i18next.changeLanguage(currentLng === 'en' ? 'hi' : 'en');
-                });
-
                 const connectWallet = document.getElementById('connectWallet');
                 connectWallet.addEventListener('click', connectWalletHandler);
+
+                const generateReferral = document.getElementById('generateReferral');
+                generateReferral.addEventListener('click', generateReferralLink);
 
                 // Initialize Web3 with fallback
                 if (window.ethereum) {
@@ -975,6 +968,7 @@
                         updateUI();
                     } catch (error) {
                         document.getElementById('status').textContent = 'Error connecting MetaMask: ' + error.message;
+                        console.error('MetaMask Error:', error);
                     }
                 } else {
                     try {
@@ -983,9 +977,9 @@
                             chains: [97], // BNB Testnet
                             showQrModal: true,
                             rpcMap: {
-                                97: 'https://data-seed-prebsc-1-s1.binance.org:8545' // Primary RPC
+                                97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
                             },
-                            optionalChains: [97], // Ensure compatibility
+                            optionalChains: [97],
                             metadata: {
                                 name: 'Atheist Protocol',
                                 description: 'Decentralized staking platform',
@@ -994,7 +988,7 @@
                             }
                         });
                         web3 = new Web3(provider);
-                        await provider.connect();
+                        await provider.enable(); // Use enable for WalletConnect
                         const accounts = await web3.eth.getAccounts();
                         account = accounts[0];
                         await checkOwnerStatus();
@@ -1016,10 +1010,11 @@
                         document.getElementById('status').textContent = 'Connected via MetaMask';
                     } catch (error) {
                         document.getElementById('status').textContent = 'Error connecting MetaMask: ' + error.message;
+                        console.error('MetaMask Connection Error:', error);
                     }
                 } else if (provider && !account) {
                     try {
-                        await provider.connect();
+                        await provider.enable();
                         const accounts = await web3.eth.getAccounts();
                         account = accounts[0];
                         await checkOwnerStatus();
@@ -1054,6 +1049,25 @@
                         document.getElementById('ownerControls').classList.remove('hidden');
                     }
                     document.getElementById('userControls').classList.remove('hidden');
+                }
+            }
+
+            function generateReferralLink() {
+                if (account) {
+                    const referralCode = account.substring(2, 8); // Simple 6-char code from address
+                    const baseUrl = 'https://eienzen.github.io/atheist/';
+                    const referralLink = `${baseUrl}?ref=${account}`;
+                    const referralElement = document.getElementById('referralLink');
+                    referralElement.textContent = referralLink;
+                    referralElement.classList.remove('hidden');
+                    // Optionally copy to clipboard
+                    navigator.clipboard.writeText(referralLink).then(() => {
+                        document.getElementById('status').textContent = 'Referral link copied to clipboard!';
+                    }).catch(err => {
+                        document.getElementById('status').textContent = 'Error copying referral link.';
+                    });
+                } else {
+                    document.getElementById('status').textContent = 'Please connect a wallet first.';
                 }
             }
 
