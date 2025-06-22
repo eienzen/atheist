@@ -1,114 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atheist Protocol</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/eienzen/atheist/refs/heads/main/favicon.ico">
-    <script defer src="https://cdn.jsdelivr.net/npm/web3@4.2.0/dist/web3.min.js"></script>
-    <script defer src="https://unpkg.com/@walletconnect/ethereum-provider@2.8.0/dist/umd/index.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/i18next@21.9.1/dist/umd/i18next.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/i18next-http-backend@2.2.1/i18nextHttpBackend.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.0.1/i18nextBrowserLanguageDetector.min.js"></script>
-    <script defer src="https://unpkg.com/axios/dist/axios.min.js"></script>
-</head>
-<body class="bg-gray-100 font-sans">
-    <div id="app" class="container mx-auto p-4">
-        <header class="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-4">
-            <h1 class="text-2xl font-bold">Atheist Protocol</h1>
-            <button id="connectWallet" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Connect Wallet
-            </button>
-            <div id="status" class="mt-2 text-sm text-red-500"></div>
-            <button id="generateReferral" class="mt-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-                Generate Referral Link
-            </button>
-            <div id="referralLink" class="mt-2 text-sm text-blue-500 hidden"></div>
-        </header>
-
-        <div id="dashboard" class="hidden bg-white p-4 rounded-lg shadow-md mb-4">
-            <h2 class="text-xl font-semibold mb-2">Dashboard</h2>
-            <div id="aprs" class="grid grid-cols-2 gap-4 mb-4">
-                <!-- APRs will be populated here -->
-            </div>
-            <div id="rewardPool" class="mb-4">
-                <p>Reward Pool: <span id="rewardPoolValue">0 APT</span></p>
-            </div>
-            <div id="ownerControls" class="hidden mb-4">
-                <h3 class="text-lg font-medium">Owner Controls</h3>
-                <input type="number" id="baseFeeInput" placeholder="Base Fee (wei)" class="border p-2 mr-2">
-                <input type="number" id="feePerTokenInput" placeholder="Fee Per Token (wei)" class="border p-2 mr-2">
-                <button id="updateFeeButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Update Fee
-                </button>
-                <input type="number" id="planIndexInput" placeholder="Plan Index" class="border p-2 mr-2">
-                <input type="number" id="newAPRInput" placeholder="New APR (bp)" class="border p-2 mr-2">
-                <button id="updateAPRButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Update APR
-                </button>
-                <button id="disableStakingButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                    Disable Staking
-                </button>
-                <input type="number" id="withdrawAmountInput" placeholder="Withdraw Amount (wei)" class="border p-2 mr-2">
-                <button id="withdrawBNBButton" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
-                    Withdraw BNB
-                </button>
-            </div>
-            <div id="userControls" class="mb-4">
-                <h3 class="text-lg font-medium">User Actions</h3>
-                <div id="stakeForm" class="mb-4">
-                    <h4 class="text-md font-medium">Stake</h4>
-                    <input type="number" id="stakeAmount" placeholder="Amount" class="border p-2 mr-2">
-                    <select id="stakePlan" class="border p-2 mr-2">
-                        <option value="0">Flexible (2% APR)</option>
-                        <option value="1">60 Days (4% APR)</option>
-                        <option value="2">180 Days (6% APR)</option>
-                        <option value="3">360 Days (10% APR)</option>
-                    </select>
-                    <input type="text" id="referrerAddress" placeholder="Referrer Address (optional)" class="border p-2 mr-2">
-                    <button id="stakeButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                        Stake
-                    </button>
-                </div>
-                <div id="unstakeForm" class="mb-4">
-                    <h4 class="text-md font-medium">Unstake</h4>
-                    <input type="number" id="unstakeIndex" placeholder="Stake Index" class="border p-2 mr-2">
-                    <button id="unstakeButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                        Unstake
-                    </button>
-                </div>
-                <div id="transferForm" class="mb-4">
-                    <h4 class="text-md font-medium">Transfer</h4>
-                    <input type="text" id="transferRecipient" placeholder="Recipient Address" class="border p-2 mr-2">
-                    <input type="number" id="transferAmount" placeholder="Amount" class="border p-2 mr-2">
-                    <button id="transferButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Transfer with Fee
-                    </button>
-                </div>
-                <div id="transferFromForm" class="mb-4">
-                    <h4 class="text-md font-medium">Transfer From</h4>
-                    <input type="text" id="transferFromSender" placeholder="Sender Address" class="border p-2 mr-2">
-                    <input type="text" id="transferFromRecipient" placeholder="Recipient Address" class="border p-2 mr-2">
-                    <input type="number" id="transferFromAmount" placeholder="Amount" class="border p-2 mr-2">
-                    <button id="transferFromButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Transfer From with Fee
-                    </button>
-                </div>
-                <div id="claimRewardsForm" class="mb-4">
-                    <h4 class="text-md font-medium">Claim Referral Rewards</h4>
-                    <button id="claimRewardsButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                        Claim Rewards
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const projectId = 'e48a76cd2f08f0e5749c36152d1eee09'; // Provided Project ID
-        const contractAddress = '0x561A53F49654FAac8aF303cc2ceA0F94FafAc87B';
-        const contractABI = [
+<script>
+    const projectId = 'e48a76cd2f08f0e5749c36152d1eee09';
+    const contractAddress = '0x0A0F6457D4380d69C51dAcFF789fB94084b8d9d4'; // Remix से नया एड्रेस डालें
+    const contractABI = [
 	{
 		"inputs": [
 			{
@@ -173,6 +66,25 @@
 			}
 		],
 		"name": "BNBWithdrawn",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "FeesCollected",
 		"type": "event"
 	},
 	{
@@ -371,6 +283,13 @@
 	{
 		"inputs": [],
 		"name": "claimReferralRewards",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "collectFees",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -835,6 +754,11 @@
 				"internalType": "uint256",
 				"name": "planIndex",
 				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "referrer",
+				"type": "address"
 			}
 		],
 		"stateMutability": "view",
@@ -936,303 +860,217 @@
 	}
 ];
 
-        let web3, account, provider, isOwner = false;
+    let web3, account, provider, isOwner = false;
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize i18next (Optional: 404 errors will occur until translation.json files are uploaded to https://eienzen.github.io/atheist/locales/)
-            i18next.use(i18nextHttpBackend).use(i18nextBrowserLanguageDetector).init({
-                fallbackLng: 'en',
-                debug: true,
-                backend: {
-                    loadPath: 'https://eienzen.github.io/atheist/locales/{{lng}}/translation.json'
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+        } else {
+            provider = await WalletConnectProvider.init({
+                projectId: projectId,
+                chains: [97],
+                showQrModal: true,
+                rpcMap: { 97: 'https://data-seed-prebsc-1-s1.binance.org:8545' },
+                optionalChains: [97],
+                metadata: {
+                    name: 'Atheist Protocol',
+                    description: 'Decentralized staking platform',
+                    url: 'https://eienzen.github.io/atheist/',
+                    icons: ['https://raw.githubusercontent.com/eienzen/atheist/refs/heads/main/favicon.ico']
                 }
-            }, (err, t) => {
-                if (err) {
-                    console.warn('i18next initialization failed, proceeding without localization:', err);
-                } else {
-                    console.log('i18next initialized, checking translations...');
-                }
-                initializeApp();
             });
+            web3 = new Web3(provider);
+        }
 
-            async function initializeApp() {
-                const connectWallet = document.getElementById('connectWallet');
-                connectWallet.addEventListener('click', connectWalletHandler);
+        const connectWallet = document.getElementById('connectWallet');
+        connectWallet.addEventListener('click', connectWalletHandler);
 
-                const generateReferral = document.getElementById('generateReferral');
-                generateReferral.addEventListener('click', generateReferralLink);
+        const generateReferral = document.getElementById('generateReferral');
+        generateReferral.addEventListener('click', generateReferralLink);
 
-                // Initialize Web3 with fallback
-                if (window.ethereum) {
-                    web3 = new Web3(window.ethereum);
-                    try {
-                        const accounts = await web3.eth.requestAccounts();
-                        account = accounts[0];
-                        await checkOwnerStatus();
-                        updateUI();
-                    } catch (error) {
-                        document.getElementById('status').textContent = 'Error connecting MetaMask: ' + error.message;
-                        console.error('MetaMask Error:', error);
-                    }
-                } else {
-                    try {
-                        provider = await WalletConnectProvider.init({
-                            projectId: projectId,
-                            chains: [97], // BNB Testnet
-                            showQrModal: true,
-                            rpcMap: {
-                                97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
-                            },
-                            optionalChains: [97],
-                            metadata: {
-                                name: 'Atheist Protocol',
-                                description: 'Decentralized staking platform',
-                                url: 'https://eienzen.github.io/atheist/',
-                                icons: ['https://raw.githubusercontent.com/eienzen/atheist/refs/heads/main/favicon.ico']
-                            }
-                        });
-                        web3 = new Web3(provider);
-                        await provider.enable();
-                        const accounts = await web3.eth.getAccounts();
-                        account = accounts[0];
-                        await checkOwnerStatus();
-                        updateUI();
-                    } catch (error) {
-                        document.getElementById('status').textContent = 'Error initializing WalletConnect: ' + error.message;
-                        console.error('WalletConnect Error:', error);
-                    }
-                }
+        async function connectWalletHandler() {
+            try {
+                const accounts = await web3.eth.requestAccounts();
+                account = accounts[0];
+                await checkOwnerStatus();
+                updateUI();
+                document.getElementById('status').textContent = 'Connected';
+            } catch (error) {
+                document.getElementById('status').textContent = 'Error connecting: ' + error.message;
             }
+        }
 
-            async function connectWalletHandler() {
-                if (window.ethereum) {
-                    try {
-                        const accounts = await web3.eth.requestAccounts();
-                        account = accounts[0];
-                        await checkOwnerStatus();
-                        updateUI();
-                        document.getElementById('status').textContent = 'Connected via MetaMask';
-                    } catch (error) {
-                        document.getElementById('status').textContent = 'Error connecting MetaMask: ' + error.message;
-                        console.error('MetaMask Connection Error:', error);
-                    }
-                } else if (provider && !account) {
-                    try {
-                        await provider.enable();
-                        const accounts = await web3.eth.getAccounts();
-                        account = accounts[0];
-                        await checkOwnerStatus();
-                        updateUI();
-                        document.getElementById('status').textContent = 'Connected via WalletConnect';
-                    } catch (error) {
-                        document.getElementById('status').textContent = 'Error connecting WalletConnect: ' + error.message;
-                        console.error('WalletConnect Connection Error:', error);
-                    }
-                } else {
-                    document.getElementById('status').textContent = 'No wallet provider available. Install MetaMask or scan QR for WalletConnect.';
-                }
+        async function checkOwnerStatus() {
+            if (web3 && account) {
+                const contract = new web3.eth.Contract(contractABI, contractAddress);
+                const owner = await contract.methods.owner().call();
+                isOwner = web3.utils.toChecksumAddress(account) === web3.utils.toChecksumAddress(owner);
             }
+        }
 
-            async function checkOwnerStatus() {
-                if (web3 && account) {
-                    try {
-                        const contract = new web3.eth.Contract(contractABI, contractAddress);
-                        const owner = await contract.methods.owner().call();
-                        isOwner = web3.utils.toChecksumAddress(account) === web3.utils.toChecksumAddress(owner);
-                    } catch (error) {
-                        console.error('Error checking owner status:', error);
-                    }
+        function updateUI() {
+            if (account) {
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
+                if (isOwner) {
+                    document.getElementById('ownerControls').classList.remove('hidden');
                 }
+                document.getElementById('userControls').classList.remove('hidden');
             }
+        }
 
-            function updateUI() {
-                if (account) {
-                    document.getElementById('dashboard').classList.remove('hidden');
-                    document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
-                    if (isOwner) {
-                        document.getElementById('ownerControls').classList.remove('hidden');
-                    }
-                    document.getElementById('userControls').classList.remove('hidden');
-                }
+        function generateReferralLink() {
+            if (account) {
+                const referralLink = `https://eienzen.github.io/atheist/?ref=${account}`;
+                const referralElement = document.getElementById('referralLink');
+                referralElement.textContent = referralLink;
+                referralElement.classList.remove('hidden');
+                navigator.clipboard.writeText(referralLink).then(() => {
+                    document.getElementById('status').textContent = 'Referral link copied!';
+                }).catch(() => {
+                    document.getElementById('status').textContent = 'Error copying link.';
+                });
+            } else {
+                document.getElementById('status').textContent = 'Please connect a wallet first.';
             }
+        }
 
-            function generateReferralLink() {
-                if (account) {
-                    const referralCode = account.substring(2, 8); // Simple 6-char code from address
-                    const baseUrl = 'https://eienzen.github.io/atheist/';
-                    const referralLink = `${baseUrl}?ref=${account}`;
-                    const referralElement = document.getElementById('referralLink');
-                    referralElement.textContent = referralLink;
-                    referralElement.classList.remove('hidden');
-                    navigator.clipboard.writeText(referralLink).then(() => {
-                        document.getElementById('status').textContent = 'Referral link copied to clipboard!';
-                    }).catch(err => {
-                        document.getElementById('status').textContent = 'Error copying referral link.';
-                    });
-                } else {
-                    document.getElementById('status').textContent = 'Please connect a wallet first.';
-                }
+        let contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Update Fee
+        document.getElementById('updateFeeButton').addEventListener('click', async () => {
+            if (isOwner && account) {
+                const baseFee = web3.utils.toWei(document.getElementById('baseFeeInput').value || '0', 'ether');
+                const feePerToken = web3.utils.toWei(document.getElementById('feePerTokenInput').value || '0', 'ether');
+                await contract.methods.setTransferFee(baseFee, feePerToken).send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Fee updated')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Only owner can update fees.';
             }
-
-            // Contract initialization
-            let contract;
-            if (web3) {
-                contract = new web3.eth.Contract(contractABI, contractAddress);
-                // Populate APRs
-                (async () => {
-                    try {
-                        const plans = await Promise.all([
-                            contract.methods.stakingPlans(0).call(),
-                            contract.methods.stakingPlans(1).call(),
-                            contract.methods.stakingPlans(2).call(),
-                            contract.methods.stakingPlans(3).call()
-                        ]);
-                        const aprsElement = document.getElementById('aprs');
-                        aprsElement.innerHTML = `
-                            <p>Flexible: ${plans[0].apr / 100}% APR</p>
-                            <p>60 Days: ${plans[1].apr / 100}% APR</p>
-                            <p>180 Days: ${plans[2].apr / 100}% APR</p>
-                            <p>360 Days: ${plans[3].apr / 100}% APR</p>
-                        `;
-                    } catch (error) {
-                        console.error('Error fetching staking plans:', error);
-                    }
-                })();
-
-                // Update reward pool
-                (async () => {
-                    try {
-                        const balance = await contract.methods.getRewardPoolBalance().call();
-                        document.getElementById('rewardPoolValue').textContent = web3.utils.fromWei(balance, 'ether') + ' APT';
-                    } catch (error) {
-                        console.error('Error fetching reward pool:', error);
-                    }
-                })();
-
-                // Referral handling
-                const urlParams = new URLSearchParams(window.location.search);
-                const ref = urlParams.get('ref');
-                if (ref) {
-                    document.getElementById('referrerAddress').value = ref;
-                }
-            }
-
-            // Event listeners with security checks
-            document.getElementById('updateFeeButton')?.addEventListener('click', () => {
-                if (isOwner && account) {
-                    const baseFee = document.getElementById('baseFeeInput').value;
-                    const feePerToken = document.getElementById('feePerTokenInput').value;
-                    contract.methods.setTransferFee(baseFee, feePerToken).send({ from: account })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Fee updated successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Only owner can update fees.';
-                }
-            });
-
-            document.getElementById('updateAPRButton')?.addEventListener('click', () => {
-                if (isOwner && account) {
-                    const planIndex = document.getElementById('planIndexInput').value;
-                    const newAPR = document.getElementById('newAPRInput').value;
-                    contract.methods.setStakingPlanAPR(planIndex, newAPR).send({ from: account })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'APR updated successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Only owner can update APR.';
-                }
-            });
-
-            document.getElementById('disableStakingButton')?.addEventListener('click', () => {
-                if (isOwner && account) {
-                    contract.methods.disableStaking().send({ from: account })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Staking disabled successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Only owner can disable staking.';
-                }
-            });
-
-            document.getElementById('withdrawBNBButton')?.addEventListener('click', () => {
-                if (isOwner && account) {
-                    const amount = document.getElementById('withdrawAmountInput').value;
-                    contract.methods.withdrawBNB(amount).send({ from: account })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'BNB withdrawn successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Only owner can withdraw BNB.';
-                }
-            });
-
-            document.getElementById('stakeButton')?.addEventListener('click', () => {
-                if (account) {
-                    const amount = document.getElementById('stakeAmount').value;
-                    const planIndex = document.getElementById('stakePlan').value;
-                    const referrer = document.getElementById('referrerAddress').value || '0x0000000000000000000000000000000000000000';
-                    contract.methods.depositStake(amount, planIndex, referrer).send({ from: account, value: 0 })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Staked successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Please connect a wallet first.';
-                }
-            });
-
-            document.getElementById('unstakeButton')?.addEventListener('click', () => {
-                if (account) {
-                    const stakeIndex = document.getElementById('unstakeIndex').value;
-                    contract.methods.unstake(stakeIndex).send({ from: account })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Unstaked successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Please connect a wallet first.';
-                }
-            });
-
-            document.getElementById('transferButton')?.addEventListener('click', async () => {
-                if (account) {
-                    const recipient = document.getElementById('transferRecipient').value;
-                    const amount = document.getElementById('transferAmount').value;
-                    const fee = await contract.methods.calculateTransferFee(amount).call();
-                    contract.methods.transferWithFee(recipient, amount).send({ from: account, value: fee })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Transferred successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Please connect a wallet first.';
-                }
-            });
-
-            document.getElementById('transferFromButton')?.addEventListener('click', async () => {
-                if (account) {
-                    const sender = document.getElementById('transferFromSender').value;
-                    const recipient = document.getElementById('transferFromRecipient').value;
-                    const amount = document.getElementById('transferFromAmount').value;
-                    const fee = await contract.methods.calculateTransferFee(amount).call();
-                    contract.methods.transferFromWithFee(sender, recipient, amount).send({ from: account, value: fee })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Transferred successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Please connect a wallet first.';
-                }
-            });
-
-            document.getElementById('claimRewardsButton')?.addEventListener('click', () => {
-                if (account) {
-                    contract.methods.claimReferralRewards().send({ from: account })
-                        .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
-                        .on('receipt', () => document.getElementById('status').textContent = 'Rewards claimed successfully')
-                        .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
-                } else {
-                    document.getElementById('status').textContent = 'Please connect a wallet first.';
-                }
-            });
         });
-    </script>
-</body>
-</html>
+
+        // Update APR
+        document.getElementById('updateAPRButton').addEventListener('click', async () => {
+            if (isOwner && account) {
+                const planIndex = document.getElementById('planIndexInput').value;
+                const newAPR = document.getElementById('newAPRInput').value;
+                await contract.methods.setStakingPlanAPR(planIndex, newAPR).send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'APR updated')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Only owner can update APR.';
+            }
+        });
+
+        // Disable Staking
+        document.getElementById('disableStakingButton').addEventListener('click', async () => {
+            if (isOwner && account) {
+                await contract.methods.disableStaking().send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Staking disabled')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Only owner can disable staking.';
+            }
+        });
+
+        // Withdraw BNB
+        document.getElementById('withdrawBNBButton').addEventListener('click', async () => {
+            if (isOwner && account) {
+                const amount = document.getElementById('withdrawAmountInput').value;
+                await contract.methods.withdrawBNB(amount).send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'BNB withdrawn')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Only owner can withdraw BNB.';
+            }
+        });
+
+        // Collect Fees
+        document.getElementById('collectFeesButton').addEventListener('click', async () => {
+            if (isOwner && account) {
+                await contract.methods.collectFees().send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Fees collected')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Only owner can collect fees.';
+            }
+        });
+
+        // Stake
+        document.getElementById('stakeButton').addEventListener('click', async () => {
+            if (account) {
+                const amount = web3.utils.toWei(document.getElementById('stakeAmount').value, 'ether');
+                const planIndex = document.getElementById('stakePlan').value;
+                const referrer = document.getElementById('referrerAddress').value || '0x0000000000000000000000000000000000000000';
+                await contract.methods.depositStake(amount, planIndex, referrer).send({ from: account, value: 0 })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Staked successfully')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Please connect a wallet first.';
+            }
+        });
+
+        // Unstake
+        document.getElementById('unstakeButton').addEventListener('click', async () => {
+            if (account) {
+                const stakeIndex = document.getElementById('unstakeIndex').value;
+                await contract.methods.unstake(stakeIndex).send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Unstaked successfully')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Please connect a wallet first.';
+            }
+        });
+
+        // Transfer with Fee
+        document.getElementById('transferButton').addEventListener('click', async () => {
+            if (account) {
+                const recipient = document.getElementById('transferRecipient').value;
+                const amount = web3.utils.toWei(document.getElementById('transferAmount').value, 'ether');
+                const fee = await contract.methods.calculateTransferFee(amount).call();
+                await contract.methods.transferWithFee(recipient, amount).send({ from: account, value: fee })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Transferred successfully')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Please connect a wallet first.';
+            }
+        });
+
+        // Transfer From with Fee
+        document.getElementById('transferFromButton').addEventListener('click', async () => {
+            if (account) {
+                const sender = document.getElementById('transferFromSender').value;
+                const recipient = document.getElementById('transferFromRecipient').value;
+                const amount = web3.utils.toWei(document.getElementById('transferFromAmount').value, 'ether');
+                const fee = await contract.methods.calculateTransferFee(amount).call();
+                await contract.methods.transferFromWithFee(sender, recipient, amount).send({ from: account, value: fee })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Transferred successfully')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Please connect a wallet first.';
+            }
+        });
+
+        // Claim Referral Rewards
+        document.getElementById('claimRewardsButton').addEventListener('click', async () => {
+            if (account) {
+                await contract.methods.claimReferralRewards().send({ from: account })
+                    .on('transactionHash', hash => document.getElementById('status').textContent = 'Transaction sent: ' + hash)
+                    .on('receipt', () => document.getElementById('status').textContent = 'Rewards claimed')
+                    .on('error', error => document.getElementById('status').textContent = 'Error: ' + error.message);
+            } else {
+                document.getElementById('status').textContent = 'Please connect a wallet first.';
+            }
+        });
+    });
+</script>
