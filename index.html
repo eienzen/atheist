@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/eienzen/atheist/refs/heads/main/favicon.ico">
     <script defer src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <script defer src="https://unpkg.com/@walletconnect/ethereum-provider@2.8.0/dist/umd/index.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/i18next@21.9.1/dist/umd/i18next.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/i18next-http-backend@2.2.1/i18nextHttpBackend.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.0.1/i18nextBrowserLanguageDetector.min.js"></script>
@@ -102,415 +102,837 @@
     </div>
 
     <script>
-        const projectId = 'e48a76cd2f08f0e5749c36152d1eee09'; // Replace with your WalletConnect Project ID
+        const projectId = 'e48a76cd2f08f0e5749c36152d1eee09'; // Provided Project ID
         const contractAddress = '0x561A53F49654FAac8aF303cc2ceA0F94FafAc87B';
         const contractABI = [
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "owner", "type": "address"}
-                ],
-                "name": "OwnableInvalidOwner",
-                "type": "error"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "account", "type": "address"}
-                ],
-                "name": "OwnableUnauthorizedAccount",
-                "type": "error"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "owner", "type": "address"},
-                    {"indexed": true, "internalType": "address", "name": "spender", "type": "address"},
-                    {"indexed": false, "internalType": "uint256", "name": "value", "type": "uint256"}
-                ],
-                "name": "Approval",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "owner", "type": "address"},
-                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "BNBWithdrawn",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "previousOwner", "type": "address"},
-                    {"indexed": true, "internalType": "address", "name": "newOwner", "type": "address"}
-                ],
-                "name": "OwnershipTransferred",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "referrer", "type": "address"},
-                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "ReferralReward",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
-                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"indexed": false, "internalType": "uint256", "name": "planIndex", "type": "uint256"},
-                    {"indexed": false, "internalType": "address", "name": "referrer", "type": "address"}
-                ],
-                "name": "Staked",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [],
-                "name": "StakingDisabled",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": false, "internalType": "uint256", "name": "planIndex", "type": "uint256"},
-                    {"indexed": false, "internalType": "uint256", "name": "apr", "type": "uint256"}
-                ],
-                "name": "StakingPlanUpdated",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "from", "type": "address"},
-                    {"indexed": true, "internalType": "address", "name": "to", "type": "address"},
-                    {"indexed": false, "internalType": "uint256", "name": "value", "type": "uint256"}
-                ],
-                "name": "Transfer",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": false, "internalType": "uint256", "name": "baseFee", "type": "uint256"},
-                    {"indexed": false, "internalType": "uint256", "name": "feePerToken", "type": "uint256"}
-                ],
-                "name": "TransferFeeUpdated",
-                "type": "event"
-            },
-            {
-                "anonymous": false,
-                "inputs": [
-                    {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
-                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"indexed": false, "internalType": "uint256", "name": "rewards", "type": "uint256"},
-                    {"indexed": false, "internalType": "uint256", "name": "stakeIndex", "type": "uint256"}
-                ],
-                "name": "Unstaked",
-                "type": "event"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "spender", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "approve",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "claimReferralRewards",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "spender", "type": "address"},
-                    {"internalType": "uint256", "name": "subtractedValue", "type": "uint256"}
-                ],
-                "name": "decreaseAllowance",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"internalType": "uint256", "name": "planIndex", "type": "uint256"},
-                    {"internalType": "address", "name": "referrer", "type": "address"}
-                ],
-                "name": "depositStake",
-                "outputs": [],
-                "stateMutability": "payable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "disableStaking",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "spender", "type": "address"},
-                    {"internalType": "uint256", "name": "addedValue", "type": "uint256"}
-                ],
-                "name": "increaseAllowance",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "renounceOwnership",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "planIndex", "type": "uint256"},
-                    {"internalType": "uint256", "name": "newAPR", "type": "uint256"}
-                ],
-                "name": "setStakingPlanAPR",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "_baseFee", "type": "uint256"},
-                    {"internalType": "uint256", "name": "_feePerToken", "type": "uint256"}
-                ],
-                "name": "setTransferFee",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "recipient", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "transfer",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "sender", "type": "address"},
-                    {"internalType": "address", "name": "recipient", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "transferFrom",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "sender", "type": "address"},
-                    {"internalType": "address", "name": "recipient", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "transferFromWithFee",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "payable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "newOwner", "type": "address"}
-                ],
-                "name": "transferOwnership",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "recipient", "type": "address"},
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "transferWithFee",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "payable",
-                "type": "function"
-            },
-            {
-                "stateMutability": "payable",
-                "type": "receive"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "stakeIndex", "type": "uint256"}
-                ],
-                "name": "unstake",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "withdrawBNB",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "owner", "type": "address"},
-                    {"internalType": "address", "name": "spender", "type": "address"}
-                ],
-                "name": "allowance",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "account", "type": "address"}
-                ],
-                "name": "balanceOf",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "baseFee",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
-                ],
-                "name": "calculateTransferFee",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "decimals",
-                "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "feePerToken",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "getContractBalance",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"}
-                ],
-                "name": "getReferralRewards",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "getRewardPoolBalance",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "user", "type": "address"},
-                    {"internalType": "uint256", "name": "stakeIndex", "type": "uint256"}
-                ],
-                "name": "getStakeInfo",
-                "outputs": [
-                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
-                    {"internalType": "uint256", "name": "startTime", "type": "uint256"},
-                    {"internalType": "uint256", "name": "lockPeriod", "type": "uint256"},
-                    {"internalType": "uint256", "name": "rewards", "type": "uint256"},
-                    {"internalType": "uint256", "name": "planIndex", "type": "uint256"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "isStakingActive",
-                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "name",
-                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "owner",
-                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "", "type": "uint256"}
-                ],
-                "name": "stakingPlans",
-                "outputs": [
-                    {"internalType": "uint256", "name": "lockPeriod", "type": "uint256"},
-                    {"internalType": "uint256", "name": "apr", "type": "uint256"},
-                    {"internalType": "bool", "name": "active", "type": "bool"}
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "symbol",
-                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "totalSupply",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "OwnableInvalidOwner",
+		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "OwnableUnauthorizedAccount",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "BNBWithdrawn",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "referrer",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "ReferralReward",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "planIndex",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "referrer",
+				"type": "address"
+			}
+		],
+		"name": "Staked",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [],
+		"name": "StakingDisabled",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "planIndex",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "apr",
+				"type": "uint256"
+			}
+		],
+		"name": "StakingPlanUpdated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "baseFee",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "feePerToken",
+				"type": "uint256"
+			}
+		],
+		"name": "TransferFeeUpdated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "rewards",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "stakeIndex",
+				"type": "uint256"
+			}
+		],
+		"name": "Unstaked",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "claimReferralRewards",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "subtractedValue",
+				"type": "uint256"
+			}
+		],
+		"name": "decreaseAllowance",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "planIndex",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "referrer",
+				"type": "address"
+			}
+		],
+		"name": "depositStake",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "disableStaking",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "addedValue",
+				"type": "uint256"
+			}
+		],
+		"name": "increaseAllowance",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "planIndex",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "newAPR",
+				"type": "uint256"
+			}
+		],
+		"name": "setStakingPlanAPR",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_baseFee",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_feePerToken",
+				"type": "uint256"
+			}
+		],
+		"name": "setTransferFee",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFromWithFee",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transferWithFee",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "stakeIndex",
+				"type": "uint256"
+			}
+		],
+		"name": "unstake",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "withdrawBNB",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			}
+		],
+		"name": "allowance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "baseFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "calculateTransferFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "decimals",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "feePerToken",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getContractBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getReferralRewards",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getRewardPoolBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "stakeIndex",
+				"type": "uint256"
+			}
+		],
+		"name": "getStakeInfo",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "lockPeriod",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "rewards",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "planIndex",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "isStakingActive",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "stakingPlans",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "lockPeriod",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "apr",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
 
-        let web3, account, contract;
+        let web3, account, provider;
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Initialize i18next
@@ -518,18 +940,19 @@
                 fallbackLng: 'en',
                 debug: true,
                 backend: {
-                    loadPath: '/locales/{{lng}}/translation.json'
+                    loadPath: 'https://eienzen.github.io/atheist/locales/{{lng}}/translation.json'
                 }
             }, () => {
+                console.log('i18next initialized, checking translations...');
                 i18next.on('languageChanged', () => {
-                    document.getElementById('app').innerHTML = ''; // Clear content
-                    document.body.innerHTML = document.getElementById('app').outerHTML; // Rebuild DOM
+                    document.getElementById('app').innerHTML = '';
+                    document.body.innerHTML = document.getElementById('app').outerHTML;
                     initializeApp();
                 });
                 initializeApp();
             });
 
-            function initializeApp() {
+            async function initializeApp() {
                 const languageToggle = document.getElementById('languageToggle');
                 languageToggle.addEventListener('click', () => {
                     const currentLng = i18next.language;
@@ -541,45 +964,83 @@
 
                 if (window.ethereum) {
                     web3 = new Web3(window.ethereum);
-                } else if (window.web3) {
-                    web3 = new Web3(window.web3.currentProvider);
-                } else {
-                    const provider = new WalletConnectProvider({
-                        infuraId: projectId,
-                        rpc: {
-                            97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+                    try {
+                        const accounts = await web3.eth.getAccounts();
+                        if (accounts.length > 0) {
+                            account = accounts[0];
+                            document.getElementById('dashboard').classList.remove('hidden');
+                            document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
+                            document.getElementById('status').textContent = 'Wallet connected via MetaMask';
                         }
-                    });
-                    web3 = new Web3(provider);
+                    } catch (error) {
+                        console.error('MetaMask connection error:', error);
+                    }
+                } else {
+                    // Initialize WalletConnect v2 provider
+                    try {
+                        provider = await WalletConnectProvider.init({
+                            projectId: projectId,
+                            chains: [97], // BNB Testnet chain ID
+                            showQrModal: true,
+                            rpcMap: {
+                                97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+                            }
+                        });
+                        web3 = new Web3(provider);
+                    } catch (error) {
+                        console.error('WalletConnect initialization error:', error);
+                        document.getElementById('status').textContent = 'Error initializing WalletConnect: ' + error.message;
+                        return;
+                    }
+                }
+
+                if (web3 && !account) {
+                    try {
+                        const accounts = await web3.eth.getAccounts();
+                        if (accounts.length > 0) {
+                            account = accounts[0];
+                            document.getElementById('dashboard').classList.remove('hidden');
+                            document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
+                            document.getElementById('status').textContent = 'Wallet connected';
+                        }
+                    } catch (error) {
+                        console.error('Error getting accounts:', error);
+                    }
                 }
 
                 contract = new web3.eth.Contract(contractABI, contractAddress);
 
                 // Check owner
-                contract.methods.owner().call().then(owner => {
+                try {
+                    const owner = await contract.methods.owner().call();
                     if (web3.utils.isAddress(account) && account.toLowerCase() === owner.toLowerCase()) {
                         document.getElementById('ownerControls').classList.remove('hidden');
                     }
-                });
+                } catch (error) {
+                    console.error('Error fetching owner:', error);
+                }
 
                 // Populate APRs
-                contract.methods.stakingPlans(0).call().then(plan => {
-                    document.getElementById('aprs').innerHTML += `<p>Flexible: ${plan.apr / 100}% APR</p>`;
-                });
-                contract.methods.stakingPlans(1).call().then(plan => {
-                    document.getElementById('aprs').innerHTML += `<p>60 Days: ${plan.apr / 100}% APR</p>`;
-                });
-                contract.methods.stakingPlans(2).call().then(plan => {
-                    document.getElementById('aprs').innerHTML += `<p>180 Days: ${plan.apr / 100}% APR</p>`;
-                });
-                contract.methods.stakingPlans(3).call().then(plan => {
-                    document.getElementById('aprs').innerHTML += `<p>360 Days: ${plan.apr / 100}% APR</p>`;
-                });
+                try {
+                    const plan0 = await contract.methods.stakingPlans(0).call();
+                    document.getElementById('aprs').innerHTML += `<p>Flexible: ${plan0.apr / 100}% APR</p>`;
+                    const plan1 = await contract.methods.stakingPlans(1).call();
+                    document.getElementById('aprs').innerHTML += `<p>60 Days: ${plan1.apr / 100}% APR</p>`;
+                    const plan2 = await contract.methods.stakingPlans(2).call();
+                    document.getElementById('aprs').innerHTML += `<p>180 Days: ${plan2.apr / 100}% APR</p>`;
+                    const plan3 = await contract.methods.stakingPlans(3).call();
+                    document.getElementById('aprs').innerHTML += `<p>360 Days: ${plan3.apr / 100}% APR</p>`;
+                } catch (error) {
+                    console.error('Error fetching staking plans:', error);
+                }
 
                 // Update reward pool
-                contract.methods.getRewardPoolBalance().call().then(balance => {
+                try {
+                    const balance = await contract.methods.getRewardPoolBalance().call();
                     document.getElementById('rewardPoolValue').textContent = web3.utils.fromWei(balance, 'ether') + ' APT';
-                });
+                } catch (error) {
+                    console.error('Error fetching reward pool:', error);
+                }
 
                 // Referral handling
                 const urlParams = new URLSearchParams(window.location.search);
@@ -730,24 +1191,23 @@
                         account = accounts[0];
                         document.getElementById('dashboard').classList.remove('hidden');
                         document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
-                        document.getElementById('status').textContent = 'Wallet connected';
+                        document.getElementById('status').textContent = 'Wallet connected via MetaMask';
                     } catch (error) {
                         document.getElementById('status').textContent = 'Error connecting wallet: ' + error.message;
                     }
+                } else if (provider) {
+                    try {
+                        await provider.connect();
+                        const accounts = await web3.eth.getAccounts();
+                        account = accounts[0];
+                        document.getElementById('dashboard').classList.remove('hidden');
+                        document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
+                        document.getElementById('status').textContent = 'Wallet connected via WalletConnect';
+                    } catch (error) {
+                        document.getElementById('status').textContent = 'Error connecting via WalletConnect: ' + error.message;
+                    }
                 } else {
-                    const provider = new WalletConnectProvider({
-                        infuraId: projectId,
-                        rpc: {
-                            97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
-                        }
-                    });
-                    await provider.enable();
-                    web3 = new Web3(provider);
-                    const accounts = await web3.eth.getAccounts();
-                    account = accounts[0];
-                    document.getElementById('dashboard').classList.remove('hidden');
-                    document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
-                    document.getElementById('status').textContent = 'Wallet connected via WalletConnect';
+                    document.getElementById('status').textContent = 'No wallet provider available. Install MetaMask or use WalletConnect.';
                 }
             }
         });
