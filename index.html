@@ -939,15 +939,19 @@
         let web3, account, provider, isOwner = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize i18next (Note: 404 errors will occur until translation.json files are uploaded to https://eienzen.github.io/atheist/locales/)
+            // Initialize i18next (Optional: 404 errors will occur until translation.json files are uploaded to https://eienzen.github.io/atheist/locales/)
             i18next.use(i18nextHttpBackend).use(i18nextBrowserLanguageDetector).init({
                 fallbackLng: 'en',
                 debug: true,
                 backend: {
                     loadPath: 'https://eienzen.github.io/atheist/locales/{{lng}}/translation.json'
                 }
-            }, () => {
-                console.log('i18next initialized, checking translations...');
+            }, (err, t) => {
+                if (err) {
+                    console.warn('i18next initialization failed, proceeding without localization:', err);
+                } else {
+                    console.log('i18next initialized, checking translations...');
+                }
                 initializeApp();
             });
 
@@ -988,7 +992,7 @@
                             }
                         });
                         web3 = new Web3(provider);
-                        await provider.enable(); // Use enable for WalletConnect
+                        await provider.enable();
                         const accounts = await web3.eth.getAccounts();
                         account = accounts[0];
                         await checkOwnerStatus();
@@ -1060,7 +1064,6 @@
                     const referralElement = document.getElementById('referralLink');
                     referralElement.textContent = referralLink;
                     referralElement.classList.remove('hidden');
-                    // Optionally copy to clipboard
                     navigator.clipboard.writeText(referralLink).then(() => {
                         document.getElementById('status').textContent = 'Referral link copied to clipboard!';
                     }).catch(err => {
