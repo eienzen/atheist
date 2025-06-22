@@ -3,664 +3,752 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atheist Protocol (APT) Dashboard</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@web3modal/html@2.7.1/dist/web3modal-html.min.js"></script>
+    <title>Atheist Protocol</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/eienzen/atheist/refs/heads/main/favicon.ico">
+    <script defer src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/i18next@21.9.1/dist/umd/i18next.min.js"></script>
-    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/i18next-http-backend@2.2.1/i18nextHttpBackend.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@7.0.1/i18nextBrowserLanguageDetector.min.js"></script>
+    <script defer src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
-    <div class="container mx-auto p-4">
-        <!-- Language Toggle -->
-        <div class="flex justify-end mb-4">
-            <button id="langToggle" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" disabled>
-                <span data-i18n="toggleLanguage">Switch to Hindi</span>
+    <div id="app" class="container mx-auto p-4">
+        <header class="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-4">
+            <h1 class="text-2xl font-bold">Atheist Protocol</h1>
+            <button id="languageToggle" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Switch to Hindi
             </button>
-        </div>
+            <button id="connectWallet" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Connect Wallet
+            </button>
+        </header>
 
-        <h1 class="text-3xl font-bold text-center mb-6" data-i18n="dashboardTitle">Atheist Protocol (APT) Dashboard</h1>
-        <div id="i18nError" class="hidden text-red-500 mb-4">Translation library failed to load. Displaying in English.</div>
-        <div id="walletInfo" class="mb-4 p-4 bg-white rounded shadow">
-            <p data-i18n="wallet">Wallet: <span id="walletAddress">Connect Wallet</span></p>
-            <p data-i18n="aptBalance">APT Balance: <span id="tokenBalance">0</span></p>
-            <p data-i18n="bnbBalance">BNB Balance: <span id="bnbBalance">0</span></p>
-            <p data-i18n="rewardPoolBalance">Reward Pool Balance: <span id="rewardPoolBalance">0</span> APT</p>
-            <p data-i18n="stakingStatus">Staking Status: <span id="stakingStatus">Unknown</span></p>
-            <button id="connectWallet" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" data-i18n="connectWallet">Connect Wallet</button>
-        </div>
-
-        <!-- Referral Section -->
-        <div class="mb-4 p-4 bg-white rounded shadow">
-            <h2 class="text-2xl font-semibold mb-4" data-i18n="referralSection">Referral Program</h2>
-            <p data-i18n="referralLink">Your Referral Link: <span id="referralLink">Connect wallet to generate</span></p>
-            <button id="copyReferralLink" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-2" data-i18n="copyLink" disabled>Copy Link</button>
-            <p data-i18n="referralRewards">Referral Rewards: <span id="referralRewards">0</span> APT</p>
-            <button id="claimReferralButton" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 mt-2" data-i18n="claimRewards" disabled>Claim Rewards</button>
-        </div>
-
-        <!-- Real-Time Dashboard -->
-        <div class="mb-4 p-4 bg-white rounded shadow">
-            <h2 class="text-2xl font-semibold mb-4" data-i18n="realTimeDashboard">Real-Time Dashboard</h2>
-            <p data-i18n="flexibleAPR">Flexible Staking APR: <span id="flexibleAPR">0%</span></p>
-            <p data-i18n="lock60APR">60-Day Lock APR: <span id="lock60APR">0%</span></p>
-            <p data-i18n="lock180APR">180-Day Lock APR: <span id="lock180APR">0%</span></p>
-            <p data-i18n="lock360APR">360-Day Lock APR: <span id="lock360APR">0%</span></p>
-        </div>
-
-        <!-- Staking Section -->
-        <div class="mb-4 p-4 bg-white rounded shadow">
-            <h2 class="text-2xl font-semibold mb-4" data-i18n="stakingSection">Staking</h2>
-            <label class="block mb-2" data-i18n="amountAPT">Amount (APT):</label>
-            <input id="stakeAmount" type="number" class="border p-2 w-full mb-2 rounded" placeholder="1000">
-            <label class="block mb-2" data-i18n="choosePlan">Choose Plan:</label>
-            <select id="stakePlan" class="border p-2 w-full mb-2 rounded">
-                <option value="0" data-i18n="flexiblePlan">Flexible (2% APR)</option>
-                <option value="1" data-i18n="lock60Plan">60 Days (4% APR)</option>
-                <option value="2" data-i18n="lock180Plan">180 Days (6% APR)</option>
-                <option value="3" data-i18n="lock360Plan">360 Days (10% APR)</option>
-            </select>
-            <label class="block mb-2" data-i18n="referrerAddress">Referrer Address (Optional):</label>
-            <input id="referrerAddress" type="text" class="border p-2 w-full mb-2 rounded" placeholder="0x...">
-            <button id="stakeButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" data-i18n="stake" disabled>Stake</button>
-        </div>
-
-        <!-- Unstaking Section -->
-        <div class="mb-4 p-4 bg-white rounded shadow">
-            <h2 class="text-2xl font-semibold mb-4" data-i18n="unstakingSection">Unstaking</h2>
-            <label class="block mb-2" data-i18n="stakeIndex">Stake Index:</label>
-            <input id="unstakeIndex" type="number" class="border p-2 w-full mb-2 rounded" placeholder="0">
-            <button id="unstakeButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" data-i18n="unstake" disabled>Unstake</button>
-            <div id="stakeInfo" class="mt-4"></div>
-        </div>
-
-        <!-- Transfer Section -->
-        <div class="mb-4 p-4 bg-white rounded shadow">
-            <h2 class="text-2xl font-semibold mb-4" data-i18n="transferSection">Token Transfer</h2>
-            <label class="block mb-2" data-i18n="receiverAddress">Receiver Address:</label>
-            <input id="transferRecipient" type="text" class="border p-2 w-full mb-2 rounded" placeholder="0x...">
-            <label class="block mb-2" data-i18n="amountAPT">Amount (APT):</label>
-            <input id="transferAmount" type="number" class="border p-2 w-full mb-2 rounded" placeholder="1000">
-            <p data-i18n="estimatedFee">Estimated Fee: <span id="transferFee">0</span> BNB</p>
-            <button id="calculateFeeButton" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mb-2" data-i18n="checkFee">Check Fee</button>
-            <button id="transferButton" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" data-i18n="transfer" disabled>Transfer</button>
-        </div>
-
-        <!-- Owner Controls -->
-        <div id="ownerControls" class="mb-4 p-4 bg-white rounded shadow hidden">
-            <h2 class="text-2xl font-semibold mb-4" data-i18n="ownerControls">Owner Controls</h2>
-            <label class="block mb-2" data-i18n="newBaseFee">New Base Fee (BNB):</label>
-            <input id="newBaseFee" type="number" step="0.00000001" class="border p-2 w-full mb-2 rounded" placeholder="0.00005">
-            <label class="block mb-2" data-i18n="newFeePerToken">New Fee Per Token (BNB):</label>
-            <input id="newFeePerToken" type="number" step="0.000000000000000001" class="border p-2 w-full mb-2 rounded" placeholder="0.000000001">
-            <button id="setFeeButton" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 mb-2" data-i18n="updateFee" disabled>Update Fee</button>
-            <label class="block mb-2" data-i18n="planIndex">Plan Index:</label>
-            <input id="aprPlanIndex" type="number" class="border p-2 w-full mb-2 rounded" placeholder="0">
-            <label class="block mb-2" data-i18n="newAPR">New APR (Basis Points):</label>
-            <input id="newAPR" type="number" class="border p-2 w-full mb-2 rounded" placeholder="300">
-            <button id="setAPRButton" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mb-2" data-i18n="updateAPR" disabled>Update APR</button>
-            <button id="disableStakingButton" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mb-2" data-i18n="disableStaking" disabled>Disable Staking</button>
-            <label class="block mb-2" data-i18n="withdrawBNB">Withdraw BNB (BNB):</label>
-            <input id="withdrawAmount" type="number" step="0.0001" class="border p-2 w-full mb-2 rounded" placeholder="0.01">
-            <button id="withdrawBNBButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" data-i18n="withdrawBNBBtn" disabled>Withdraw BNB</button>
-            <p data-i18n="contractBNBBalance">Contract BNB Balance: <span id="contractBalance">0</span> BNB</p>
+        <div id="dashboard" class="hidden bg-white p-4 rounded-lg shadow-md mb-4">
+            <h2 class="text-xl font-semibold mb-2">Dashboard</h2>
+            <div id="aprs" class="grid grid-cols-2 gap-4 mb-4">
+                <!-- APRs will be populated here -->
+            </div>
+            <div id="rewardPool" class="mb-4">
+                <p>Reward Pool: <span id="rewardPoolValue">0 APT</span></p>
+            </div>
+            <div id="ownerControls" class="hidden mb-4">
+                <h3 class="text-lg font-medium">Owner Controls</h3>
+                <input type="number" id="baseFeeInput" placeholder="Base Fee (wei)" class="border p-2 mr-2">
+                <input type="number" id="feePerTokenInput" placeholder="Fee Per Token (wei)" class="border p-2 mr-2">
+                <button id="updateFeeButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Update Fee
+                </button>
+                <input type="number" id="planIndexInput" placeholder="Plan Index" class="border p-2 mr-2">
+                <input type="number" id="newAPRInput" placeholder="New APR (bp)" class="border p-2 mr-2">
+                <button id="updateAPRButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Update APR
+                </button>
+                <button id="disableStakingButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    Disable Staking
+                </button>
+                <input type="number" id="withdrawAmountInput" placeholder="Withdraw Amount (wei)" class="border p-2 mr-2">
+                <button id="withdrawBNBButton" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                    Withdraw BNB
+                </button>
+            </div>
+            <div id="stakeForm" class="mb-4">
+                <h3 class="text-lg font-medium">Stake</h3>
+                <input type="number" id="stakeAmount" placeholder="Amount" class="border p-2 mr-2">
+                <select id="stakePlan" class="border p-2 mr-2">
+                    <option value="0">Flexible (2% APR)</option>
+                    <option value="1">60 Days (4% APR)</option>
+                    <option value="2">180 Days (6% APR)</option>
+                    <option value="3">360 Days (10% APR)</option>
+                </select>
+                <input type="text" id="referrerAddress" placeholder="Referrer Address (optional)" class="border p-2 mr-2">
+                <button id="stakeButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Stake
+                </button>
+            </div>
+            <div id="unstakeForm" class="mb-4">
+                <h3 class="text-lg font-medium">Unstake</h3>
+                <input type="number" id="unstakeIndex" placeholder="Stake Index" class="border p-2 mr-2">
+                <button id="unstakeButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    Unstake
+                </button>
+            </div>
+            <div id="transferForm" class="mb-4">
+                <h3 class="text-lg font-medium">Transfer</h3>
+                <input type="text" id="transferRecipient" placeholder="Recipient Address" class="border p-2 mr-2">
+                <input type="number" id="transferAmount" placeholder="Amount" class="border p-2 mr-2">
+                <button id="transferButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Transfer with Fee
+                </button>
+            </div>
+            <div id="transferFromForm" class="mb-4">
+                <h3 class="text-lg font-medium">Transfer From</h3>
+                <input type="text" id="transferFromSender" placeholder="Sender Address" class="border p-2 mr-2">
+                <input type="text" id="transferFromRecipient" placeholder="Recipient Address" class="border p-2 mr-2">
+                <input type="number" id="transferFromAmount" placeholder="Amount" class="border p-2 mr-2">
+                <button id="transferFromButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Transfer From with Fee
+                </button>
+            </div>
+            <div id="claimRewardsForm" class="mb-4">
+                <h3 class="text-lg font-medium">Claim Referral Rewards</h3>
+                <button id="claimRewardsButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Claim Rewards
+                </button>
+            </div>
+            <div id="status" class="mb-4 text-green-600"></div>
         </div>
     </div>
 
     <script>
-        // Initialize i18next for multilingual support
-        function initializeI18next() {
-            if (typeof i18next === 'undefined') {
-                console.error('i18next is not loaded. Falling back to English.');
-                document.getElementById('i18nError').classList.remove('hidden');
-                document.getElementById('langToggle').disabled = true;
-                updateTranslations({}); // Use default English text
-                return;
-            }
-
-            i18next.init({
-                lng: 'en',
-                resources: {
-                    en: {
-                        translation: {
-                            toggleLanguage: 'Switch to Hindi',
-                            dashboardTitle: 'Atheist Protocol (APT) Dashboard',
-                            wallet: 'Wallet:',
-                            aptBalance: 'APT Balance:',
-                            bnbBalance: 'BNB Balance:',
-                            rewardPoolBalance: 'Reward Pool Balance:',
-                            stakingStatus: 'Staking Status:',
-                            connectWallet: 'Connect Wallet',
-                            referralSection: 'Referral Program',
-                            referralLink: 'Your Referral Link:',
-                            copyLink: 'Copy Link',
-                            referralRewards: 'Referral Rewards:',
-                            claimRewards: 'Claim Rewards',
-                            realTimeDashboard: 'Real-Time Dashboard',
-                            flexibleAPR: 'Flexible Staking APR:',
-                            lock60APR: '60-Day Lock APR:',
-                            lock180APR: '180-Day Lock APR:',
-                            lock360APR: '360-Day Lock APR:',
-                            stakingSection: 'Staking',
-                            amountAPT: 'Amount (APT):',
-                            choosePlan: 'Choose Plan:',
-                            flexiblePlan: 'Flexible (2% APR)',
-                            lock60Plan: '60 Days (4% APR)',
-                            lock180Plan: '180 Days (6% APR)',
-                            lock360Plan: '360 Days (10% APR)',
-                            referrerAddress: 'Referrer Address (Optional):',
-                            stake: 'Stake',
-                            unstakingSection: 'Unstaking',
-                            stakeIndex: 'Stake Index:',
-                            unstake: 'Unstake',
-                            transferSection: 'Token Transfer',
-                            receiverAddress: 'Receiver Address:',
-                            estimatedFee: 'Estimated Fee:',
-                            checkFee: 'Check Fee',
-                            transfer: 'Transfer',
-                            ownerControls: 'Owner Controls',
-                            newBaseFee: 'New Base Fee (BNB):',
-                            newFeePerToken: 'New Fee Per Token (BNB):',
-                            updateFee: 'Update Fee',
-                            planIndex: 'Plan Index:',
-                            newAPR: 'New APR (Basis Points):',
-                            updateAPR: 'Update APR',
-                            disableStaking: 'Disable Staking',
-                            withdrawBNB: 'Withdraw BNB (BNB):',
-                            withdrawBNBBtn: 'Withdraw BNB',
-                            contractBNBBalance: 'Contract BNB Balance:',
-                            active: 'Active',
-                            inactive: 'Inactive',
-                            noStakes: 'No Stakes',
-                            stakeSuccess: 'Staking Successful!',
-                            stakeError: 'Staking Error',
-                            unstakeSuccess: 'Unstaking Successful!',
-                            unstakeError: 'Unstaking Error',
-                            feeError: 'Fee Calculation Error',
-                            transferSuccess: 'Transfer Successful!',
-                            transferError: 'Transfer Error',
-                            claimSuccess: 'Referral Rewards Claimed!',
-                            claimError: 'Referral Claim Error',
-                            feeUpdateSuccess: 'Fee Update Successful!',
-                            feeUpdateError: 'Fee Update Error',
-                            aprUpdateSuccess: 'APR Update Successful!',
-                            aprUpdateError: 'APR Update Error',
-                            disableStakingSuccess: 'Staking Disabled!',
-                            disableStakingError: 'Disable Staking Error',
-                            withdrawSuccess: 'BNB Withdrawal Successful!',
-                            withdrawError: 'BNB Withdrawal Error',
-                            start: 'Start',
-                            lock: 'Lock',
-                            days: 'Days',
-                            rewards: 'Rewards'
-                        }
-                    },
-                    hi: {
-                        translation: {
-                            toggleLanguage: 'अंग्रेजी में स्विच करें',
-                            dashboardTitle: 'एथीस्ट प्रोटोकॉल (APT) डैशबोर्ड',
-                            wallet: 'वॉलेट:',
-                            aptBalance: 'APT बैलेंस:',
-                            bnbBalance: 'BNB बैलेंस:',
-                            rewardPoolBalance: 'रिवॉर्ड पूल बैलेंस:',
-                            stakingStatus: 'स्टेकिंग स्थिति:',
-                            connectWallet: 'वॉलेट कनेक्ट करें',
-                            referralSection: 'रेफरल प्रोग्राम',
-                            referralLink: 'आपका रेफरल लिंक:',
-                            copyLink: 'लिंक कॉपी करें',
-                            referralRewards: 'रेफरल रिवॉर्ड्स:',
-                            claimRewards: 'रिवॉर्ड्स क्लेम करें',
-                            realTimeDashboard: 'रियल-टाइम डैशबोर्ड',
-                            flexibleAPR: 'फ्लेक्सिबल स्टेकिंग APR:',
-                            lock60APR: '60-दिन लॉक APR:',
-                            lock180APR: '180-दिन लॉक APR:',
-                            lock360APR: '360-दिन लॉक APR:',
-                            stakingSection: 'स्टेकिंग',
-                            amountAPT: 'अमाउंट (APT):',
-                            choosePlan: 'प्लान चुनें:',
-                            flexiblePlan: 'फ्लेक्सिबल (2% APR)',
-                            lock60Plan: '60 दिन (4% APR)',
-                            lock180Plan: '180 दिन (6% APR)',
-                            lock360Plan: '360 दिन (10% APR)',
-                            referrerAddress: 'रेफरर एड्रेस (वैकल्पिक):',
-                            stake: 'स्टेक करें',
-                            unstakingSection: 'अनस्टेकिंग',
-                            stakeIndex: 'स्टेक इंडेक्स:',
-                            unstake: 'अनस्टेक करें',
-                            transferSection: 'टोकन ट्रांसफर',
-                            receiverAddress: 'रिसीवर एड्रेस:',
-                            estimatedFee: 'अनुमानित फीस:',
-                            checkFee: 'फीस चेक करें',
-                            transfer: 'ट्रांसफर करें',
-                            ownerControls: 'मालिक कंट्रोल्स',
-                            newBaseFee: 'नया बेस फीस (BNB):',
-                            newFeePerToken: 'नया प्रति टोकन फीस (BNB):',
-                            updateFee: 'फीस अपडेट करें',
-                            planIndex: 'प्लान इंडेक्स:',
-                            newAPR: 'नया APR (बेसिस पॉइंट्स):',
-                            updateAPR: 'APR अपडेट करें',
-                            disableStaking: 'स्टेकिंग बंद करें',
-                            withdrawBNB: 'BNB निकालें (BNB):',
-                            withdrawBNBBtn: 'BNB निकालें',
-                            contractBNBBalance: 'कॉन्ट्रैक्ट BNB बैलेंस:',
-                            active: 'सक्रिय',
-                            inactive: 'बंद',
-                            noStakes: 'कोई स्टेक नहीं',
-                            stakeSuccess: 'Stake Successful!',
-                            stakeError: 'Stake exited!',
-                            unstakeSuccess: 'Unstake successful!',
-                            unstakeError: 'Unstake failed',
-                            feeError: 'Fee calculation error',
-                            transferSuccess: 'Transfer successful!',
-                            transferError: 'Transfer exited!',
-                            claimSuccess: 'Referral rewards claimed!',
-                            claimError: 'Referral claim exited!',
-                            feeUpdateSuccess: 'Fee update successful!',
-                            feeUpdateError: 'Fee update exited!',
-                            aprUpdateSuccess: 'APR update successful!',
-                            aprUpdateError: 'APR update exited!',
-                            disableStakingSuccess: 'Staking disabled!',
-                            disableStakingError: 'Disable staking exited!',
-                            withdrawSuccess: 'BNB withdrawal successful!',
-                            withdrawError: 'BNB withdrawal exited!',
-                            start: 'शुरू',
-                            lock: 'लॉक',
-                            days: 'दिन',
-                            rewards: 'रिवॉर्ड्स'
-                        }
-                    }
-                }
-            }, (err) => {
-                if (err) {
-                    console.error('i18next initialization failed:', err);
-                    document.getElementById('i18nError').classList.remove('hidden');
-                    document.getElementById('langToggle').disabled = true;
-                    updateTranslations({});
-                } else {
-                    document.getElementById('langToggle').disabled = false;
-                    updateTranslations(i18next);
-                }
-            });
-        }
-
-        // Update translations
-        function updateTranslations(i18n) {
-            document.querySelectorAll('[data-i18n]').forEach(elem => {
-                const key = elem.getAttribute('data-i18n');
-                elem.innerHTML = i18n && i18n.t ? i18n.t(key) : key;
-            });
-        }
-
-        // Language toggle
-        document.getElementById('langToggle').addEventListener('click', () => {
-            if (typeof i18next === 'undefined') {
-                console.error('i18next not loaded for language toggle');
-                return;
-            }
-            const newLang = i18next.language === 'en' ? 'hi' : 'en';
-            i18next.changeLanguage(newLang, (err) => {
-                if (err) {
-                    console.error('Language change failed:', err);
-                    return;
-                }
-                updateTranslations(i18next);
-                document.getElementById('langToggle').innerHTML = `<span data-i18n="toggleLanguage">${i18next.t('toggleLanguage')}</span>`;
-            });
-        });
-
-        // Initialize i18next after window load to ensure script is loaded
-        window.addEventListener('load', initializeI18next);
-
-        // Web3Modal configuration
-        const projectId = 'YOUR_WALLET_CONNECT_PROJECT_ID'; // Get from https://cloud.walletconnect.com
-        if (!projectId || projectId === 'YOUR_WALLET_CONNECT_PROJECT_ID') {
-            console.error('WalletConnect projectId is missing. Get it from https://cloud.walletconnect.com');
-            alert('WalletConnect configuration error. Please contact the developer.');
-        }
-
-        const chains = [
+        const projectId = 'YOUR_WALLET_CONNECT_PROJECT_ID'; // Replace with your WalletConnect Project ID
+        const contractAddress = '0x561A53F49654FAac8aF303cc2ceA0F94FafAc87B';
+        const contractABI = [
             {
-                chainId: '0x61', // BNB Testnet
-                name: 'BNB Smart Chain Testnet',
-                currency: 'BNB',
-                explorerUrl: 'https://testnet.bscscan.com',
-                rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+                "inputs": [
+                    {"internalType": "address", "name": "owner", "type": "address"}
+                ],
+                "name": "OwnableInvalidOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "account", "type": "address"}
+                ],
+                "name": "OwnableUnauthorizedAccount",
+                "type": "error"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "owner", "type": "address"},
+                    {"indexed": true, "internalType": "address", "name": "spender", "type": "address"},
+                    {"indexed": false, "internalType": "uint256", "name": "value", "type": "uint256"}
+                ],
+                "name": "Approval",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "owner", "type": "address"},
+                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "BNBWithdrawn",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "previousOwner", "type": "address"},
+                    {"indexed": true, "internalType": "address", "name": "newOwner", "type": "address"}
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "referrer", "type": "address"},
+                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "ReferralReward",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
+                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"indexed": false, "internalType": "uint256", "name": "planIndex", "type": "uint256"},
+                    {"indexed": false, "internalType": "address", "name": "referrer", "type": "address"}
+                ],
+                "name": "Staked",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [],
+                "name": "StakingDisabled",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": false, "internalType": "uint256", "name": "planIndex", "type": "uint256"},
+                    {"indexed": false, "internalType": "uint256", "name": "apr", "type": "uint256"}
+                ],
+                "name": "StakingPlanUpdated",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "from", "type": "address"},
+                    {"indexed": true, "internalType": "address", "name": "to", "type": "address"},
+                    {"indexed": false, "internalType": "uint256", "name": "value", "type": "uint256"}
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": false, "internalType": "uint256", "name": "baseFee", "type": "uint256"},
+                    {"indexed": false, "internalType": "uint256", "name": "feePerToken", "type": "uint256"}
+                ],
+                "name": "TransferFeeUpdated",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
+                    {"indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"indexed": false, "internalType": "uint256", "name": "rewards", "type": "uint256"},
+                    {"indexed": false, "internalType": "uint256", "name": "stakeIndex", "type": "uint256"}
+                ],
+                "name": "Unstaked",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "approve",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "claimReferralRewards",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "subtractedValue", "type": "uint256"}
+                ],
+                "name": "decreaseAllowance",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"internalType": "uint256", "name": "planIndex", "type": "uint256"},
+                    {"internalType": "address", "name": "referrer", "type": "address"}
+                ],
+                "name": "depositStake",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "disableStaking",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "addedValue", "type": "uint256"}
+                ],
+                "name": "increaseAllowance",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "renounceOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "planIndex", "type": "uint256"},
+                    {"internalType": "uint256", "name": "newAPR", "type": "uint256"}
+                ],
+                "name": "setStakingPlanAPR",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "_baseFee", "type": "uint256"},
+                    {"internalType": "uint256", "name": "_feePerToken", "type": "uint256"}
+                ],
+                "name": "setTransferFee",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "recipient", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "transfer",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "sender", "type": "address"},
+                    {"internalType": "address", "name": "recipient", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "transferFrom",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "sender", "type": "address"},
+                    {"internalType": "address", "name": "recipient", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "transferFromWithFee",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "newOwner", "type": "address"}
+                ],
+                "name": "transferOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "recipient", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "transferWithFee",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "stakeIndex", "type": "uint256"}
+                ],
+                "name": "unstake",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "withdrawBNB",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "owner", "type": "address"},
+                    {"internalType": "address", "name": "spender", "type": "address"}
+                ],
+                "name": "allowance",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "account", "type": "address"}
+                ],
+                "name": "balanceOf",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "baseFee",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"}
+                ],
+                "name": "calculateTransferFee",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "feePerToken",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getContractBalance",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "user", "type": "address"}
+                ],
+                "name": "getReferralRewards",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getRewardPoolBalance",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "user", "type": "address"},
+                    {"internalType": "uint256", "name": "stakeIndex", "type": "uint256"}
+                ],
+                "name": "getStakeInfo",
+                "outputs": [
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"internalType": "uint256", "name": "startTime", "type": "uint256"},
+                    {"internalType": "uint256", "name": "lockPeriod", "type": "uint256"},
+                    {"internalType": "uint256", "name": "rewards", "type": "uint256"},
+                    {"internalType": "uint256", "name": "planIndex", "type": "uint256"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "isStakingActive",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "name",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "", "type": "uint256"}
+                ],
+                "name": "stakingPlans",
+                "outputs": [
+                    {"internalType": "uint256", "name": "lockPeriod", "type": "uint256"},
+                    {"internalType": "uint256", "name": "apr", "type": "uint256"},
+                    {"internalType": "bool", "name": "active", "type": "bool"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
             }
         ];
 
-        const web3Modal = window.Web3Modal && new window.Web3Modal.Web3Modal({
-            projectId,
-            chains,
-            walletConnectVersion: 2
-        });
+        let web3, account, contract;
 
-        // Contract ABI (Paste from Remix after compiling AtheistProtocol.sol)
-        const contractABI = [ /* Paste ABI here */ ];
-
-        // Contract Address (Update after deployment on BNB Testnet)
-        const contractAddress = '0xYOUR_CONTRACT_ADDRESS_HERE';
-        let contract;
-        let accounts;
-        let web3;
-        let ownerAddress;
-
-        // Connect Wallet
-        document.getElementById('connectWallet').addEventListener('click', async () => {
-            if (!web3Modal) {
-                alert((i18next.t ? i18next.t('connectWallet') : 'Connect Wallet') + ': Web3Modal not loaded');
-                console.error('Web3Modal is not available');
-                return;
-            }
-            try {
-                const provider = await web3Modal.connect();
-                web3 = new Web3(provider);
-                accounts = await web3.eth.getAccounts();
-                if (!contractABI.length || contractAddress === '0xYOUR_CONTRACT_ADDRESS_HERE') {
-                    alert('Contract ABI or address not configured. Please update index.html.');
-                    return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize i18next
+            i18next.use(i18nextHttpBackend).use(i18nextBrowserLanguageDetector).init({
+                fallbackLng: 'en',
+                debug: true,
+                backend: {
+                    loadPath: '/locales/{{lng}}/translation.json'
                 }
-                contract = new web3.eth.Contract(contractABI, contractAddress);
-                ownerAddress = await contract.methods.owner().call();
-                document.getElementById('walletAddress').innerText = accounts[0];
-                toggleOwnerControls();
-                generateReferralLink();
-                updateBalances();
-                updateStakeInfo();
-                updateReferralRewards();
-                updateContractBalance();
-                updateStakingStatus();
-                updateDashboard();
-                enableButtons();
-            } catch (error) {
-                console.error('Wallet connection error:', error);
-                alert((i18next.t ? i18next.t('connectWallet') : 'Connect Wallet') + ': ' + error.message);
-            }
-        });
-
-        // Toggle Owner Controls visibility
-        function toggleOwnerControls() {
-            const ownerControls = document.getElementById('ownerControls');
-            if (accounts && accounts[0].toLowerCase() === ownerAddress.toLowerCase()) {
-                ownerControls.classList.remove('hidden');
-            } else {
-                ownerControls.classList.add('hidden');
-            }
-        }
-
-        // Enable buttons after wallet connection
-        function enableButtons() {
-            document.getElementById('stakeButton').disabled = false;
-            document.getElementById('unstakeButton').disabled = false;
-            document.getElementById('transferButton').disabled = false;
-            document.getElementById('claimReferralButton').disabled = false;
-            document.getElementById('setFeeButton').disabled = false;
-            document.getElementById('setAPRButton').disabled = false;
-            document.getElementById('disableStakingButton').disabled = false;
-            document.getElementById('withdrawBNBButton').disabled = false;
-        }
-
-        // Generate Referral Link
-        function generateReferralLink() {
-            if (!accounts || !accounts[0]) return;
-            const baseUrl = window.location.origin + window.location.pathname;
-            const referralLink = `${baseUrl}?ref=${accounts[0]}`;
-            document.getElementById('referralLink').innerText = referralLink;
-            document.getElementById('copyReferralLink').disabled = false;
-
-            // Check URL for referrer
-            const urlParams = new URLSearchParams(window.location.search);
-            const referrer = urlParams.get('ref');
-            if (referrer && web3.utils.isAddress(referrer)) {
-                document.getElementById('referrerAddress').value = referrer;
-            }
-        }
-
-        // Copy Referral Link
-        document.getElementById('copyReferralLink').addEventListener('click', () => {
-            const referralLink = document.getElementById('referralLink').innerText;
-            navigator.clipboard.writeText(referralLink).then(() => {
-                alert((i18next.t ? i18next.t('copyLink') : 'Copy Link') + ' Copied!');
-            }).catch(err => {
-                console.error('Copy link error:', err);
-                alert((i18next.t ? i18next.t('copyLink') : 'Copy Link') + ': ' + err.message);
-            });
-        });
-
-        // Update Balances
-        async function updateBalances() {
-            if (!contract || !accounts) return;
-            try {
-                const balance = await contract.methods.balanceOf(accounts[0]).call();
-                document.getElementById('tokenBalance').innerText = web3.utils.fromWei(balance, 'ether');
-                const bnbBalance = await web3.eth.getBalance(accounts[0]);
-                document.getElementById('bnbBalance').innerText = web3.utils.fromWei(bnbBalance, 'ether');
-                const poolBalance = await contract.methods.getRewardPoolBalance().call();
-                document.getElementById('rewardPoolBalance').innerText = web3.utils.fromWei(poolBalance, 'ether');
-            } catch (error) {
-                console.error('Update balances error:', error);
-            }
-        }
-
-        // Update Staking Status
-        async function updateStakingStatus() {
-            if (!contract) return;
-            try {
-                const isActive = await contract.methods.isStakingActive().call();
-                document.getElementById('stakingStatus').innerText = i18next.t ? i18next.t(isActive ? 'active' : 'inactive') : (isActive ? 'Active' : 'Inactive');
-                document.getElementById('stakeButton').disabled = !isActive;
-            } catch (error) {
-                console.error('Update staking status error:', error);
-            }
-        }
-
-        // Update Real-Time Dashboard
-        async function updateDashboard() {
-            if (!contract) return;
-            try {
-                const plans = [
-                    await contract.methods.stakingPlans(0).call(),
-                    await contract.methods.stakingPlans(1).call(),
-                    await contract.methods.stakingPlans(2).call(),
-                    await contract.methods.stakingPlans(3).call()
-                ];
-                document.getElementById('flexibleAPR').innerText = `${plans[0].apr / 100}%`;
-                document.getElementById('lock60APR').innerText = `${plans[1].apr / 100}%`;
-                document.getElementById('lock180APR').innerText = `${plans[2].apr / 100}%`;
-                document.getElementById('lock360APR').innerText = `${plans[3].apr / 100}%`;
-            } catch (error) {
-                console.error('Update dashboard error:', error);
-            }
-        }
-
-        // Update Stake Info
-        async function updateStakeInfo() {
-            if (!contract || !accounts) return;
-            let stakeInfo = '';
-            try {
-                for (let i = 0; i < 10; i++) {
-                    try {
-                        const stake = await contract.methods.getStakeInfo(accounts[0], i).call();
-                        if (stake.amount > 0) {
-                            stakeInfo += `<p>${i18next.t ? i18next.t('stake') : 'Stake'} ${i}: ${web3.utils.fromWei(stake.amount, 'ether')} APT, ${i18next.t ? i18next.t('start') : 'Start'}: ${new Date(stake.startTime * 1000).toLocaleString()}, ${i18next.t ? i18next.t('lock') : 'Lock'}: ${stake.lockPeriod / 86400} ${i18next.t ? i18next.t('days') : 'Days'}, ${i18next.t ? i18next.t('rewards') : 'Rewards'}: ${web3.utils.fromWei(stake.rewards, 'ether')} APT</p>`;
-                        }
-                    } catch (error) {
-                        break;
-                    }
-                }
-                document.getElementById('stakeInfo').innerHTML = stakeInfo || (i18next.t ? i18next.t('noStakes') : 'No Stakes');
-            } catch (error) {
-                console.error('Update stake info error:', error);
-            }
-        }
-
-        // Update Referral Rewards
-        async function updateReferralRewards() {
-            if (!contract || !accounts) return;
-            try {
-                const rewards = await contract.methods.getReferralRewards(accounts[0]).call();
-                document.getElementById('referralRewards').innerText = web3.utils.fromWei(rewards, 'ether');
-            } catch (error) {
-                console.error('Update referral rewards error:', error);
-            }
-        }
-
-        // Update Contract BNB Balance
-        async function updateContractBalance() {
-            if (!contract) return;
-            try {
-                const balance = await contract.methods.getContractBalance().call();
-                document.getElementById('contractBalance').innerText = web3.utils.fromWei(balance, 'ether');
-            } catch (error) {
-                console.error('Update contract balance error:', error);
-            }
-        }
-
-        // Stake
-        document.getElementById('stakeButton').addEventListener('click', async () => {
-            if (!contract || !accounts) {
-                alert((i18next.t ? i18next.t('stakeError') : 'Staking Error') + ': Wallet not connected');
-                return;
-            }
-            const amount = document.getElementById('stakeAmount').value;
-            const planIndex = document.getElementById('stakePlan').value;
-            const referrer = document.getElementById('referrerAddress').value || '0x0000000000000000000000000000000000000000';
-            if (!web3.utils.isAddress(referrer)) {
-                alert((i18next.t ? i18next.t('stakeError') : 'Staking Error') + ': Invalid referrer address');
-                return;
-            }
-            try {
-                await contract.methods.approve(contractAddress, web3.utils.toWei(amount, 'ether')).send({ from: accounts[0] });
-                await contract.methods.depositStake(web3.utils.toWei(amount, 'ether'), planIndex, referrer).send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('stakeSuccess') : 'Staking Successful!');
-                updateBalances();
-                updateStakeInfo();
-                updateDashboard();
-            } catch (error) {
-                console.error('Stake error:', error);
-                alert((i18next.t ? i18next.t('stakeError') : 'Staking Error') + ': ' + error.message);
-            }
-        });
-
-        // Unstake
-        document.getElementById('unstakeButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            const stakeIndex = document.getElementById('unstakeIndex').value;
-            try {
-                await contract.methods.unstake(stakeIndex).send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('unstakeSuccess') : 'Unstaking Successful!');
-                updateBalances();
-                updateStakeInfo();
-            } catch (error) {
-                console.error('Unstake error:', error);
-                alert((i18next.t ? i18next.t('unstakeError') : 'Unstaking Error') + ': ' + error.message);
-            }
-        });
-
-        // Calculate Transfer Fee
-        document.getElementById('calculateFeeButton').addEventListener('click', async () => {
-            if (!contract) return;
-            const amount = document.getElementById('transferAmount').value;
-            try {
-                const fee = await contract.methods.calculateTransferFee(web3.utils.toWei(amount, 'ether')).call();
-                document.getElementById('transferFee').innerText = web3.utils.fromWei(fee, 'ether');
-            } catch (error) {
-                console.error('Calculate fee error:', error);
-                alert((i18next.t ? i18next.t('feeError') : 'Fee Calculation Error') + ': ' + error.message);
-            }
-        });
-
-        // Transfer Tokens
-        document.getElementById('transferButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            const recipient = document.getElementById('transferRecipient').value;
-            const amount = document.getElementById('transferAmount').value;
-            if (!web3.utils.isAddress(recipient)) {
-                alert((i18next.t ? i18next.t('transferError') : 'Transfer Error') + ': Invalid recipient address');
-                return;
-            }
-            try {
-                const fee = await contract.methods.calculateTransferFee(web3.utils.toWei(amount, 'ether')).call();
-                await contract.methods.transfer(recipient, web3.utils.toWei(amount, 'ether')).send({
-                    from: accounts[0],
-                    value: fee
+            }, () => {
+                i18next.on('languageChanged', () => {
+                    document.getElementById('app').innerHTML = ''; // Clear content
+                    document.body.innerHTML = document.getElementById('app').outerHTML; // Rebuild DOM
+                    initializeApp();
                 });
-                alert(i18next.t ? i18next.t('transferSuccess') : 'Transfer Successful!');
-                updateBalances();
-            } catch (error) {
-                console.error('Transfer error:', error);
-                alert((i18next.t ? i18next.t('transferError') : 'Transfer Error') + ': ' + error.message);
-            }
-        });
+                initializeApp();
+            });
 
-        // Claim Referral Rewards
-        document.getElementById('claimReferralButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            try {
-                await contract.methods.claimReferralRewards().send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('claimSuccess') : 'Referral Rewards Claimed!');
-                updateBalances();
-                updateReferralRewards();
-            } catch (error) {
-                console.error('Claim rewards error:', error);
-                alert((i18next.t ? i18next.t('claimError') : 'Referral Claim Error') + ': ' + error.message);
-            }
-        });
+            function initializeApp() {
+                const languageToggle = document.getElementById('languageToggle');
+                languageToggle.addEventListener('click', () => {
+                    const currentLng = i18next.language;
+                    i18next.changeLanguage(currentLng === 'en' ? 'hi' : 'en');
+                });
 
-        // Update Transfer Fee
-        document.getElementById('setFeeButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            const baseFee = document.getElementById('newBaseFee').value;
-            const feePerToken = document.getElementById('newFeePerToken').value;
-            try {
-                await contract.methods.setTransferFee(
-                    web3.utils.toWei(baseFee, 'ether'),
-                    web3.utils.toWei(feePerToken, 'ether')
-                ).send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('feeUpdateSuccess') : 'Fee Update Successful!');
-            } catch (error) {
-                console.error('Set fee error:', error);
-                alert((i18next.t ? i18next.t('feeUpdateError') : 'Fee Update Error') + ': ' + error.message);
-            }
-        });
+                const connectWallet = document.getElementById('connectWallet');
+                connectWallet.addEventListener('click', connectWalletHandler);
 
-        // Update APR
-        document.getElementById('setAPRButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            const planIndex = document.getElementById('aprPlanIndex').value;
-            const newAPR = document.getElementById('newAPR').value;
-            try {
-                await contract.methods.setStakingPlanAPR(planIndex, newAPR).send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('aprUpdateSuccess') : 'APR Update Successful!');
-                updateDashboard();
-            } catch (error) {
-                console.error('Set APR error:', error);
-                alert((i18next.t ? i18next.t('aprUpdateError') : 'APR Update Error') + ': ' + error.message);
-            }
-        });
+                if (window.ethereum) {
+                    web3 = new Web3(window.ethereum);
+                } else if (window.web3) {
+                    web3 = new Web3(window.web3.currentProvider);
+                } else {
+                    const provider = new WalletConnectProvider({
+                        infuraId: projectId,
+                        rpc: {
+                            97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+                        }
+                    });
+                    web3 = new Web3(provider);
+                }
 
-        // Disable Staking
-        document.getElementById('disableStakingButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            try {
-                await contract.methods.disableStaking().send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('disableStakingSuccess') : 'Staking Disabled!');
-                updateStakingStatus();
-            } catch (error) {
-                console.error('Disable staking error:', error);
-                alert((i18next.t ? i18next.t('disableStakingError') : 'Disable Staking Error') + ': ' + error.message);
-            }
-        });
+                contract = new web3.eth.Contract(contractABI, contractAddress);
 
-        // Withdraw BNB
-        document.getElementById('withdrawBNBButton').addEventListener('click', async () => {
-            if (!contract || !accounts) return;
-            const amount = document.getElementById('withdrawAmount').value;
-            try {
-                await contract.methods.withdrawBNB(web3.utils.toWei(amount, 'ether')).send({ from: accounts[0] });
-                alert(i18next.t ? i18next.t('withdrawSuccess') : 'BNB Withdrawal Successful!');
-                updateContractBalance();
-            } catch (error) {
-                console.error('Withdraw BNB error:', error);
-                alert((i18next.t ? i18next.t('withdrawError') : 'BNB Withdrawal Error') + ': ' + error.message);
+                // Check owner
+                contract.methods.owner().call().then(owner => {
+                    if (web3.utils.isAddress(account) && account.toLowerCase() === owner.toLowerCase()) {
+                        document.getElementById('ownerControls').classList.remove('hidden');
+                    }
+                });
+
+                // Populate APRs
+                contract.methods.stakingPlans(0).call().then(plan => {
+                    document.getElementById('aprs').innerHTML += `<p>Flexible: ${plan.apr / 100}% APR</p>`;
+                });
+                contract.methods.stakingPlans(1).call().then(plan => {
+                    document.getElementById('aprs').innerHTML += `<p>60 Days: ${plan.apr / 100}% APR</p>`;
+                });
+                contract.methods.stakingPlans(2).call().then(plan => {
+                    document.getElementById('aprs').innerHTML += `<p>180 Days: ${plan.apr / 100}% APR</p>`;
+                });
+                contract.methods.stakingPlans(3).call().then(plan => {
+                    document.getElementById('aprs').innerHTML += `<p>360 Days: ${plan.apr / 100}% APR</p>`;
+                });
+
+                // Update reward pool
+                contract.methods.getRewardPoolBalance().call().then(balance => {
+                    document.getElementById('rewardPoolValue').textContent = web3.utils.fromWei(balance, 'ether') + ' APT';
+                });
+
+                // Referral handling
+                const urlParams = new URLSearchParams(window.location.search);
+                const ref = urlParams.get('ref');
+                if (ref) {
+                    document.getElementById('referrerAddress').value = ref;
+                }
+
+                // Event listeners
+                document.getElementById('updateFeeButton').addEventListener('click', () => {
+                    const baseFee = document.getElementById('baseFeeInput').value;
+                    const feePerToken = document.getElementById('feePerTokenInput').value;
+                    contract.methods.setTransferFee(baseFee, feePerToken).send({ from: account })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Fee updated successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('updateAPRButton').addEventListener('click', () => {
+                    const planIndex = document.getElementById('planIndexInput').value;
+                    const newAPR = document.getElementById('newAPRInput').value;
+                    contract.methods.setStakingPlanAPR(planIndex, newAPR).send({ from: account })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'APR updated successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('disableStakingButton').addEventListener('click', () => {
+                    contract.methods.disableStaking().send({ from: account })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Staking disabled successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('withdrawBNBButton').addEventListener('click', () => {
+                    const amount = document.getElementById('withdrawAmountInput').value;
+                    contract.methods.withdrawBNB(amount).send({ from: account })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'BNB withdrawn successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('stakeButton').addEventListener('click', () => {
+                    const amount = document.getElementById('stakeAmount').value;
+                    const planIndex = document.getElementById('stakePlan').value;
+                    const referrer = document.getElementById('referrerAddress').value || '0x0000000000000000000000000000000000000000';
+                    contract.methods.depositStake(amount, planIndex, referrer).send({ from: account, value: 0 })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Staked successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('unstakeButton').addEventListener('click', () => {
+                    const stakeIndex = document.getElementById('unstakeIndex').value;
+                    contract.methods.unstake(stakeIndex).send({ from: account })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Unstaked successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('transferButton').addEventListener('click', async () => {
+                    const recipient = document.getElementById('transferRecipient').value;
+                    const amount = document.getElementById('transferAmount').value;
+                    const fee = await contract.methods.calculateTransferFee(amount).call();
+                    contract.methods.transferWithFee(recipient, amount).send({ from: account, value: fee })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Transferred successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('transferFromButton').addEventListener('click', async () => {
+                    const sender = document.getElementById('transferFromSender').value;
+                    const recipient = document.getElementById('transferFromRecipient').value;
+                    const amount = document.getElementById('transferFromAmount').value;
+                    const fee = await contract.methods.calculateTransferFee(amount).call();
+                    contract.methods.transferFromWithFee(sender, recipient, amount).send({ from: account, value: fee })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Transferred successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+
+                document.getElementById('claimRewardsButton').addEventListener('click', () => {
+                    contract.methods.claimReferralRewards().send({ from: account })
+                        .on('transactionHash', hash => {
+                            document.getElementById('status').textContent = 'Transaction sent: ' + hash;
+                        })
+                        .on('receipt', receipt => {
+                            document.getElementById('status').textContent = 'Rewards claimed successfully';
+                        })
+                        .on('error', error => {
+                            document.getElementById('status').textContent = 'Error: ' + error.message;
+                        });
+                });
+            }
+
+            async function connectWalletHandler() {
+                if (window.ethereum) {
+                    try {
+                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        account = accounts[0];
+                        document.getElementById('dashboard').classList.remove('hidden');
+                        document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
+                        document.getElementById('status').textContent = 'Wallet connected';
+                    } catch (error) {
+                        document.getElementById('status').textContent = 'Error connecting wallet: ' + error.message;
+                    }
+                } else {
+                    const provider = new WalletConnectProvider({
+                        infuraId: projectId,
+                        rpc: {
+                            97: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+                        }
+                    });
+                    await provider.enable();
+                    web3 = new Web3(provider);
+                    const accounts = await web3.eth.getAccounts();
+                    account = accounts[0];
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    document.getElementById('connectWallet').textContent = 'Connected: ' + account.substring(0, 6) + '...' + account.substring(account.length - 4);
+                    document.getElementById('status').textContent = 'Wallet connected via WalletConnect';
+                }
             }
         });
     </script>
